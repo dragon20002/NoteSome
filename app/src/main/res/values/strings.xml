@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">NoteSome</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_short_text">텍스트</string>
+    <string name="title_audio">음성</string>
+    <string name="title_settings">설정</string>
+
+    <string name="permission_rationale">음성파일 읽기/쓰기 권한을 요청합니다.</string>
 </resources>
