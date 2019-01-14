@@ -19,35 +19,40 @@ class TextInputDialogFragment : BaseDialogFragment() {
     private lateinit var mEditText: TextInputEditText
 
     override fun onCreateDialog(savedInstanceState: Bundle?): AlertDialog {
-        val linearLayout = LinearLayout(activity)
-        linearLayout.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        linearLayout.orientation = LinearLayout.HORIZONTAL
-        val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32f, resources.displayMetrics).toInt()
-        linearLayout.setPadding(padding, 0, padding, 0)
+        mEditText = TextInputEditText(context).apply {
+            layoutParams =
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            setEms(10)
+            hint = getString(R.string.title_short_text)
+            inputType = InputType.TYPE_CLASS_TEXT
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) {}
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    mDialog.getButton(-1).isEnabled = checkMissingValues()
+                }
+            })
+        }
 
-        val commonsLayoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        val textInputLayout = TextInputLayout(context)
-        textInputLayout.layoutParams = commonsLayoutParams
-        textInputLayout.isCounterEnabled = true
-        textInputLayout.counterMaxLength = 64
-        textInputLayout.isHintEnabled = true
+        val textInputLayout = TextInputLayout(context).apply {
+            layoutParams =
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            isCounterEnabled = true
+            counterMaxLength = 64
+            isHintEnabled = true
+            addView(mEditText)
+        }
 
-        mEditText = TextInputEditText(context)
-        mEditText.layoutParams = commonsLayoutParams
-        mEditText.setEms(10)
-        mEditText.hint = getString(R.string.title_short_text)
-        mEditText.inputType = InputType.TYPE_CLASS_TEXT
-        mEditText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-        mEditText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {}
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                mDialog.getButton(-1).isEnabled = checkMissingValues()
+        val linearLayout = LinearLayout(activity).apply {
+            layoutParams =
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            orientation = LinearLayout.HORIZONTAL
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32f, resources.displayMetrics).toInt().let {
+                setPadding(it, 0, it, 0)
             }
-        })
-
-        textInputLayout.addView(mEditText)
-        linearLayout.addView(textInputLayout)
+            addView(textInputLayout)
+        }
 
         setDialogView(linearLayout)
         mDialog = super.onCreateDialog(savedInstanceState)
@@ -64,17 +69,19 @@ class TextInputDialogFragment : BaseDialogFragment() {
         return this
     }
 
-    fun setPositiveButton(text: String, listener: (value: String) -> String): TextInputDialogFragment {
-        super.setPositiveButton(text, DialogInterface.OnClickListener { _, _ -> listener(mEditText.text?.toString()?.trim()!!) })
+    fun setPositiveButton(text: String, listener: (value: String) -> Unit): TextInputDialogFragment {
+        super.setPositiveButton(
+            text,
+            DialogInterface.OnClickListener { _, _ -> listener(mEditText.text?.toString()?.trim()!!) })
         return this
     }
 
-//    fun setNegativeButton(text: String, listener: () -> String): TextInputDialogFragment {
+//    fun setNegativeButton(text: String, listener: () -> Unit): TextInputDialogFragment {
 //        super.setNegativeButton(text, DialogInterface.OnClickListener { _, _ -> listener() })
 //        return this
 //    }
 
-    fun setNeutralButton(text: String, listener: () -> String): TextInputDialogFragment {
+    fun setNeutralButton(text: String, listener: () -> Unit): TextInputDialogFragment {
         super.setNeutralButton(text, DialogInterface.OnClickListener { _, _ -> listener() })
         return this
     }

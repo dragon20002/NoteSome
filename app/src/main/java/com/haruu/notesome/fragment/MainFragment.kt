@@ -5,26 +5,22 @@ import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.haruu.notesome.adapter.MainRecyclerAdapter
 import com.haruu.notesome.R
+import com.haruu.notesome.adapter.MainRecyclerAdapter
 import com.haruu.notesome.dialogfragment.FileChooserDialogFragment
 import com.haruu.notesome.dialogfragment.TextInputDialogFragment
 import com.haruu.notesome.model.Some
+import com.haruu.notesome.service.FileManager
+import com.haruu.notesome.service.ServerManager
 
 sealed class MainFragment : Fragment() {
     protected abstract val mLayoutResourceId: Int
     protected abstract fun initView(rootView: View)
 
-    override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
-    ): View? {
-
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView: View = inflater.inflate(mLayoutResourceId, container, false)
         initView(rootView)
         return rootView
@@ -32,8 +28,7 @@ sealed class MainFragment : Fragment() {
 }
 
 class ShortTextMainFragment : MainFragment() {
-    override val mLayoutResourceId: Int
-        get() = R.layout.fragment_short_text
+    override val mLayoutResourceId: Int = R.layout.fragment_short_text
 
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mViewManager: RecyclerView.LayoutManager
@@ -49,25 +44,25 @@ class ShortTextMainFragment : MainFragment() {
             adapter = mViewAdapter
         }
 
-        mFloatingActionButton = rootView.findViewById(R.id.floating)
-        mFloatingActionButton.setOnClickListener { _ ->
-            val dialogFragment: TextInputDialogFragment = TextInputDialogFragment()
+        mFloatingActionButton = rootView.findViewById<FloatingActionButton>(R.id.floating).apply {
+            setOnClickListener {
+                TextInputDialogFragment()
                     .setMessage("추가할 텍스트를 입력하세요.")
-                    .setPositiveButton("확인", listener = {
-                        //TODO check data, send text
-                        Log.i("debug", "todo send text $it")
-                        it
+                    .setPositiveButton("확인", listener = { text ->
+                        ServerManager.saveText(text) { some -> mDataSet.add(some) }
                     })
-                    .setNeutralButton("취소", listener = { "취소" })
-
-            dialogFragment.show(fragmentManager, "add text")
+                    .setNeutralButton("취소", listener = {})
+                    .show(fragmentManager, "add text")
+            }
         }
+
+        FileManager.readTexts { mDataSet.addAll(it) }
+        ServerManager.loadTexts { mDataSet.addAll(it) }
     }
 }
 
 class AudioMainFragment : MainFragment() {
-    override val mLayoutResourceId: Int
-        get() = R.layout.fragment_audio
+    override val mLayoutResourceId: Int = R.layout.fragment_audio
 
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mViewManager: RecyclerView.LayoutManager
@@ -83,24 +78,25 @@ class AudioMainFragment : MainFragment() {
             adapter = mViewAdapter
         }
 
-        mFloatingActionButton = rootView.findViewById(R.id.floating)
-        mFloatingActionButton.setOnClickListener { _ ->
-            FileChooserDialogFragment()
+        mFloatingActionButton = rootView.findViewById<FloatingActionButton>(R.id.floating).apply {
+            setOnClickListener {
+                FileChooserDialogFragment()
                     .setMessage("업로드할 음성 파일을 선택하세요.")
-                    .setPositiveButton("확인", listener = {
-                        //TODO check data, send audio
-                        Log.i("debug", "todo send audio : $it")
-                        it
+                    .setPositiveButton("확인", listener = { filename ->
+                        ServerManager.saveAudio(filename) { some -> mDataSet.add(some) }
                     })
-                    .setNeutralButton("취소", listener = { "취소" })
+                    .setNeutralButton("취소", listener = {})
                     .show(fragmentManager, "add audio")
+            }
         }
+
+        FileManager.readAudios { mDataSet.addAll(it) }
+        ServerManager.loadAudios { mDataSet.addAll(it) }
     }
 }
 
 class SettingsMainFragment : MainFragment() {
-    override val mLayoutResourceId: Int
-        get() = R.layout.fragment_settings
+    override val mLayoutResourceId: Int = R.layout.fragment_settings
 
     override fun initView(rootView: View) {}
 }

@@ -19,10 +19,10 @@ class MainRecyclerAdapter(private val mDataSet: ArrayList<Some>) :
         return MainViewHolder(view)
     }
 
-    override fun getItemCount() = this.mDataSet.size
+    override fun getItemCount() = mDataSet.size
 
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
-        holder.view.title.text = this.mDataSet[position].title
+        holder.view.title.text = mDataSet[position].title
     }
 
     class MainViewHolder(val view: View) : RecyclerView.ViewHolder(view)

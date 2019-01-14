@@ -17,19 +17,15 @@ open class BaseDialogFragment : DialogFragment() {
     private var mNeutralButton: DialogButton? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): AlertDialog {
-        val builder: AlertDialog.Builder = AlertDialog.Builder(requireContext())
-        builder.setMessage(mMessage)
-        if (mView != null)
-            builder.setView(mView)
-        if (mPositiveButton != null)
-            builder.setPositiveButton(mPositiveButton?.text, mPositiveButton?.listener)
-        if (mNegativeButton != null)
-            builder.setNegativeButton(mNegativeButton?.text, mNegativeButton?.listener)
-        if (mNeutralButton != null)
-            builder.setNeutralButton(mNeutralButton?.text, mNeutralButton?.listener)
-
         isCancelable = false
-        return builder.create()
+
+        return AlertDialog.Builder(requireContext()).apply {
+            mMessage?.let { setMessage(it) }
+            mView?.let { setView(it) }
+            mPositiveButton?.let { setPositiveButton(mPositiveButton?.text, mPositiveButton?.listener) }
+            mNegativeButton?.let { setNegativeButton(mNegativeButton?.text, mNegativeButton?.listener) }
+            mNeutralButton?.let { setNeutralButton(mNeutralButton?.text, mNeutralButton?.listener) }
+        }.create()
     }
 
     open fun setMessage(message: String): BaseDialogFragment {

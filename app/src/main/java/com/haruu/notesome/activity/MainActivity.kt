@@ -5,8 +5,8 @@ import android.support.design.widget.BottomNavigationView
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
-import com.haruu.notesome.adapter.MainPagerAdapter
 import com.haruu.notesome.R
+import com.haruu.notesome.adapter.MainPagerAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import pub.devrel.easypermissions.EasyPermissions
 
@@ -16,7 +16,7 @@ internal const val SHORT_TEXT_PAGE: Int = 0
 internal const val AUDIO_PAGE: Int = 1
 internal const val SETTINGS_PAGE: Int = 2
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     private lateinit var mPagerAdapter: MainPagerAdapter
     private lateinit var mViewPager: ViewPager
     private lateinit var mNavigationView: BottomNavigationView
@@ -25,62 +25,62 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        if (!EasyPermissions.hasPermissions(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE))
+            EasyPermissions.requestPermissions(this, getString(R.string.permission_rationale), REQ_PERMISSION, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        else
+            initView()
+    }
+
+    private fun initView() {
         mPagerAdapter = MainPagerAdapter(supportFragmentManager)
-        mViewPager = pager
-        mViewPager.adapter = mPagerAdapter
-        mViewPager.addOnPageChangeListener(
-            object : ViewPager.SimpleOnPageChangeListener() {
-                private var currentMenu: MenuItem? = null
+        mViewPager = pager.apply {
+            adapter = mPagerAdapter
+            addOnPageChangeListener(
+                object : ViewPager.SimpleOnPageChangeListener() {
+                    private var currentMenu: MenuItem? = null
 
-                override fun onPageSelected(position: Int) {
-                    currentMenu?.isChecked = false
-                    currentMenu = mNavigationView.menu.getItem(position)
-                    currentMenu?.isChecked = true
-                }
-            }
-        )
+                    override fun onPageSelected(position: Int) {
+                        currentMenu?.isChecked = false
+                        currentMenu = mNavigationView.menu.getItem(position)
+                        currentMenu?.isChecked = true
+                    }
+                })
+        }
 
-        mNavigationView = navigation
-        mNavigationView.setOnNavigationItemSelectedListener(
-            BottomNavigationView.OnNavigationItemSelectedListener { item ->
-                when (item.itemId) {
-                    R.id.navigation_short_text -> {
-                        mViewPager.currentItem = SHORT_TEXT_PAGE
-                        return@OnNavigationItemSelectedListener true
+        mNavigationView = navigation.apply {
+            setOnNavigationItemSelectedListener(
+                BottomNavigationView.OnNavigationItemSelectedListener { item ->
+                    when (item.itemId) {
+                        R.id.navigation_short_text -> {
+                            mViewPager.currentItem = SHORT_TEXT_PAGE
+                            return@OnNavigationItemSelectedListener true
+                        }
+                        R.id.navigation_audio -> {
+                            mViewPager.currentItem = AUDIO_PAGE
+                            return@OnNavigationItemSelectedListener true
+                        }
+                        R.id.navigation_settings -> {
+                            mViewPager.currentItem = SETTINGS_PAGE
+                            return@OnNavigationItemSelectedListener true
+                        }
                     }
-                    R.id.navigation_audio -> {
-                        mViewPager.currentItem = AUDIO_PAGE
-                        return@OnNavigationItemSelectedListener true
-                    }
-                    R.id.navigation_settings -> {
-                        mViewPager.currentItem = SETTINGS_PAGE
-                        return@OnNavigationItemSelectedListener true
-                    }
-                }
-                false
-            }
-        )
+                    false
+                })
+        }
     }
 
-    override fun onStart() {
-        super.onStart()
-        checkPermissions()
-    }
-
+    /* Permissions */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
     }
 
-    private fun checkPermissions() {
-        val permission: String = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+    override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
+        if (requestCode == REQ_PERMISSION && perms.size > 0)
+            initView()
+    }
 
-        if (!EasyPermissions.hasPermissions(this, permission))
-            EasyPermissions.requestPermissions(
-                this,
-                getString(R.string.permission_rationale),
-                    REQ_PERMISSION,
-                permission
-            )
+    override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
+        finish()
     }
 
 }

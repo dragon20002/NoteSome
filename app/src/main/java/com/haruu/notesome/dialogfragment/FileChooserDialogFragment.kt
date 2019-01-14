@@ -1,45 +1,35 @@
 package com.haruu.notesome.dialogfragment
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.DialogInterface
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.util.Log
-import android.util.TypedValue
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
+import android.view.LayoutInflater
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import com.haruu.notesome.R
+import com.haruu.notesome.utils.RealPathUtil
+
 
 private const val REQ_FILE_SELECT: Int = 1
 
 class FileChooserDialogFragment : BaseDialogFragment() {
 
     private lateinit var mDialog: AlertDialog
-    private lateinit var mTextView: TextView
+    private lateinit var mTxtDirPath: TextView
 
     override fun onCreateDialog(savedInstanceState: Bundle?): AlertDialog {
-        val linearLayout = LinearLayout(activity)
-        linearLayout.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        linearLayout.orientation = LinearLayout.VERTICAL
-        val padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32f, resources.displayMetrics).toInt()
-        linearLayout.setPadding(padding, 0, padding, 0)
-
-        val commonsLayoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        val button = Button(context)
-        button.layoutParams = commonsLayoutParams
-        button.text = getString(R.string.title_audio)
-        button.setOnClickListener { showFileChooser() }
-
-        mTextView = TextView(context)
-        mTextView.layoutParams = commonsLayoutParams
-
-        linearLayout.addView(button)
-        linearLayout.addView(mTextView)
+        @SuppressLint("InflateParams")
+        val linearLayout = LayoutInflater.from(context).inflate(R.layout.dialogfragment_filechooser, null)
+        linearLayout.apply {
+            mTxtDirPath = findViewById(R.id.txtDirPath)
+            findViewById<ImageButton>(R.id.btnSelectAudio).setOnClickListener { showFileChooser() }
+        }
         setDialogView(linearLayout)
 
         mDialog = super.onCreateDialog(savedInstanceState)
@@ -56,29 +46,41 @@ class FileChooserDialogFragment : BaseDialogFragment() {
         return this
     }
 
-    fun setPositiveButton(text: String, listener: (value: String) -> String): FileChooserDialogFragment {
-        super.setPositiveButton(text, DialogInterface.OnClickListener { _, _ -> listener(mTextView.text.toString()) })
+    fun setPositiveButton(text: String, listener: (value: String) -> Unit): FileChooserDialogFragment {
+        super.setPositiveButton(text, DialogInterface.OnClickListener { _, _ -> listener(mTxtDirPath.text.toString()) })
         return this
     }
 
-//    fun setNegativeButton(text: String, listener: () -> String): FileChooserDialogFragment {
+//    fun setNegativeButton(text: String, listener: () -> Unit): FileChooserDialogFragment {
 //        super.setNegativeButton(text, DialogInterface.OnClickListener { _, _ -> listener() })
 //        return this
 //    }
 
-    fun setNeutralButton(text: String, listener: () -> String): FileChooserDialogFragment {
+    fun setNeutralButton(text: String, listener: () -> Unit): FileChooserDialogFragment {
         super.setNeutralButton(text, DialogInterface.OnClickListener { _, _ -> listener() })
         return this
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQ_FILE_SELECT) {
-            if (resultCode == -1) {
-                val uri: Uri? = data?.data
-                Log.i("debug", "파일 Uri : " + uri?.toString())
-                val path: String? = uri?.path
-                Log.i("debug", "파일 Path : $path")
-                mTextView.text = path
+            if (resultCode == Activity.RESULT_OK) {
+                mTxtDirPath.text = data?.data?.let {
+                    Log.i("debug", "uri=${it.path}")
+                    RealPathUtil.getRealPath(this@FileChooserDialogFragment.context!!, it)
+                }?.let {
+                    Log.i("debug", "real-path=$it")
+                    it
+                }
+//                ?.let {
+//                    val mediaStorageDir = File(it)
+//                    try {
+//                        RandomAccessFile("${mediaStorageDir.path}${File.separator}0", "rw")
+//                        mTxtDirPath.text = it
+//                        File("${mediaStorageDir.path}${File.separator}0").delete()
+//                    } catch (e: FileNotFoundException) {
+//                        Toast.makeText(this, "해당 경로에 대한 권한이 부족합니다.", Toast.LENGTH_SHORT).show()
+//                    }
+//                }
             } else {
                 Toast.makeText(context, "파일 선택이 취소되었습니다.", Toast.LENGTH_SHORT).show()
             }
@@ -87,9 +89,10 @@ class FileChooserDialogFragment : BaseDialogFragment() {
     }
 
     private fun showFileChooser() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.type = "*/*"
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        val intent: Intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "audio/*"
+            addCategory(Intent.CATEGORY_OPENABLE)
+        }
 
         try {
             startActivityForResult(Intent.createChooser(intent, "음성 파일 선택"), REQ_FILE_SELECT)
@@ -99,7 +102,7 @@ class FileChooserDialogFragment : BaseDialogFragment() {
     }
 
     private fun checkMissingValues(): Boolean {
-        return mTextView.text.isNotEmpty()
+        return mTxtDirPath.text.isNotEmpty()
     }
 
 }
