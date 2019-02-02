@@ -4,4 +4,4 @@ import android.arch.persistence.room.Entity
 import android.arch.persistence.room.PrimaryKey
 
 @Entity
-class User(@PrimaryKey val name: String)
+class ShortText(@PrimaryKey val title: String)

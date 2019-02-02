@@ -13,7 +13,7 @@ import pub.devrel.easypermissions.EasyPermissions
 private const val REQ_PERMISSION: Int = 9
 internal const val NUM_OF_PAGES: Int = 3
 internal const val SHORT_TEXT_PAGE: Int = 0
-internal const val AUDIO_PAGE: Int = 1
+internal const val SOUND_PAGE: Int = 1
 internal const val SETTINGS_PAGE: Int = 2
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
@@ -28,44 +28,44 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         if (!EasyPermissions.hasPermissions(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE))
             EasyPermissions.requestPermissions(this, getString(R.string.permission_rationale), REQ_PERMISSION, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
         else
-            initView()
+            init()
     }
 
-    private fun initView() {
+    private fun init() {
         mPagerAdapter = MainPagerAdapter(supportFragmentManager)
         mViewPager = pager.apply {
             adapter = mPagerAdapter
             addOnPageChangeListener(
-                object : ViewPager.SimpleOnPageChangeListener() {
-                    private var currentMenu: MenuItem? = null
+                    object : ViewPager.SimpleOnPageChangeListener() {
+                        private var currentMenu: MenuItem? = null
 
-                    override fun onPageSelected(position: Int) {
-                        currentMenu?.isChecked = false
-                        currentMenu = mNavigationView.menu.getItem(position)
-                        currentMenu?.isChecked = true
-                    }
-                })
+                        override fun onPageSelected(position: Int) {
+                            currentMenu?.isChecked = false
+                            currentMenu = mNavigationView.menu.getItem(position)
+                            currentMenu?.isChecked = true
+                        }
+                    })
         }
 
         mNavigationView = navigation.apply {
             setOnNavigationItemSelectedListener(
-                BottomNavigationView.OnNavigationItemSelectedListener { item ->
-                    when (item.itemId) {
-                        R.id.navigation_short_text -> {
-                            mViewPager.currentItem = SHORT_TEXT_PAGE
-                            return@OnNavigationItemSelectedListener true
+                    BottomNavigationView.OnNavigationItemSelectedListener { item ->
+                        when (item.itemId) {
+                            R.id.navigation_short_text -> {
+                                mViewPager.currentItem = SHORT_TEXT_PAGE
+                                return@OnNavigationItemSelectedListener true
+                            }
+                            R.id.navigation_audio -> {
+                                mViewPager.currentItem = SOUND_PAGE
+                                return@OnNavigationItemSelectedListener true
+                            }
+                            R.id.navigation_settings -> {
+                                mViewPager.currentItem = SETTINGS_PAGE
+                                return@OnNavigationItemSelectedListener true
+                            }
                         }
-                        R.id.navigation_audio -> {
-                            mViewPager.currentItem = AUDIO_PAGE
-                            return@OnNavigationItemSelectedListener true
-                        }
-                        R.id.navigation_settings -> {
-                            mViewPager.currentItem = SETTINGS_PAGE
-                            return@OnNavigationItemSelectedListener true
-                        }
-                    }
-                    false
-                })
+                        false
+                    })
         }
     }
 
@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
         if (requestCode == REQ_PERMISSION && perms.size > 0)
-            initView()
+            init()
     }
 
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
