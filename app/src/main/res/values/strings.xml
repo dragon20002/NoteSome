@@ -9,4 +9,8 @@
     <string name="permission_rationale">음성파일 읽기/쓰기 권한을 요청합니다.</string>
     <string name="dir_path">파일 경로</string>
     <string name="add">추가</string>
+    <string name="delete">삭제</string>
+    <string name="play">재생</string>
+    <string name="skip_prev">이전곡</string>
+    <string name="skip_next">다음곡</string>
 </resources>

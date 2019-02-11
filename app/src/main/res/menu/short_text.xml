@@ -3,6 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/delete_selected"
+        android:icon="@drawable/ic_delete_black_24dp"
+        android:title="@string/delete"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/add_short_text"
         android:icon="@drawable/ic_library_books_black_24dp"
         android:title="@string/add"

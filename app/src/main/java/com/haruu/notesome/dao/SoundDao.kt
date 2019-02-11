@@ -21,19 +21,19 @@ interface SoundDao {
     @Insert
     fun insertAll(vararg shortText: Sound): List<Long> //ids of inserted items
 
-    /**
-     * The implementation of the method will update its parameters in the database
-     * if they already exists (checked by primary keys).
-     * If they don't already exists, this option will not change the database.
-     *
-     * @return the number of rows affected
-     */
-    @Update
-    fun update(shortText: Sound): Int
+//    /**
+//     * The implementation of the method will update its parameters in the database
+//     * if they already exists (checked by primary keys).
+//     * If they don't already exists, this option will not change the database.
+//     *
+//     * @return the number of rows affected
+//     */
+//    @Update
+//    fun update(shortText: Sound): Int
 
     /**
      * @return the number of rows affected
      */
     @Delete
-    fun delete(shortText: Sound): Int
+    fun deleteAll(vararg shortText: Sound): Int
 }

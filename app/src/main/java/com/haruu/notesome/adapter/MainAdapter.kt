@@ -1,8 +1,5 @@
 package com.haruu.notesome.adapter
 
-import android.content.Context
-import android.media.MediaPlayer
-import android.net.Uri
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
@@ -20,7 +17,7 @@ import com.haruu.notesome.fragment.ShortTextMainFragment
 import com.haruu.notesome.fragment.SoundMainFragment
 import com.haruu.notesome.model.ShortText
 import com.haruu.notesome.model.Sound
-import kotlinx.android.synthetic.main.item_main_recycler.view.*
+import kotlinx.android.synthetic.main.item_sound_recycler.view.*
 
 class MainPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
 
@@ -38,47 +35,65 @@ class MainPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
 }
 
 
-class ShortTextRecyclerAdapter(private val mDataSet: ArrayList<ShortText>) :
+class ShortTextRecyclerAdapter(private val mDataSet: ArrayList<ShortText>,
+                               private val mCheckedData: ArrayList<Int>,
+                               private val onItemCheckedChanged: () -> Unit) :
         RecyclerView.Adapter<ShortTextRecyclerAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_main_recycler, parent, false)
+                .inflate(R.layout.item_text_recycler, parent, false)
         return ViewHolder(view)
     }
 
     override fun getItemCount() = mDataSet.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.view.title.text = mDataSet[position].title
+        holder.apply {
+            view.checkbox.isChecked = mCheckedData.contains(position)
+            view.checkbox.isChecked = mCheckedData.contains(position)
+            view.checkbox.setOnClickListener {
+                mCheckedData.apply {
+                    if (contains(position)) remove(position)
+                    else add(position)
+                }
+                onItemCheckedChanged()
+            }
+            view.title.text = mDataSet[position].title
+        }
     }
 
     class ViewHolder(val view: View) : RecyclerView.ViewHolder(view)
 }
 
 
-class SoundRecyclerAdapter(private val mDataSet: ArrayList<Sound>) :
+class SoundRecyclerAdapter(private val mDataSet: ArrayList<Sound>,
+                           private val mCheckedData: ArrayList<Int>,
+                           private val onItemCheckedChanged: (Int) -> Unit,
+                           private val onItemClickListener: (Sound) -> Unit) :
         RecyclerView.Adapter<SoundRecyclerAdapter.ViewHolder>() {
-
-    private var mMediaPlayer: MediaPlayer? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_main_recycler, parent, false)
+                .inflate(R.layout.item_sound_recycler, parent, false)
         return ViewHolder(view)
     }
 
     override fun getItemCount() = mDataSet.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.view.apply {
-            title.text = mDataSet[position].title
-            setOnClickListener {
-                context.getFileStreamPath(mDataSet[position].title)?.let {
-                    mMediaPlayer?.stop()
-                    mMediaPlayer = MediaPlayer.create(context, Uri.fromFile(it))
-                    mMediaPlayer?.start()
+        holder.apply {
+            view.checkbox.isChecked = mCheckedData.contains(position)
+            view.checkbox.setOnClickListener {
+                mCheckedData.apply {
+                    if (contains(position)) remove(position)
+                    else add(position)
+                    onItemCheckedChanged(size)
                 }
+            }
+            view.title.apply {
+                text = mDataSet[position].title
+                setOnClickListener { onItemClickListener(mDataSet[position]) }
             }
         }
     }

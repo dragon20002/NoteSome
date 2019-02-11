@@ -21,20 +21,20 @@ interface ShortTextDao {
     @Insert
     fun insertAll(vararg shortText: ShortText): List<Long> //ids of inserted items
 
-    /**
-     * The implementation of the method will update its parameters in the database
-     * if they already exists (checked by primary keys).
-     * If they don't already exists, this option will not change the database.
-     *
-     * @return the number of rows affected
-     */
-    @Update
-    fun update(shortText: ShortText): Int
+//    /**
+//     * The implementation of the method will update its parameters in the database
+//     * if they already exists (checked by primary keys).
+//     * If they don't already exists, this option will not change the database.
+//     *
+//     * @return the number of rows affected
+//     */
+//    @Update
+//    fun update(shortText: ShortText): Int
 
     /**
      * @return the number of rows affected
      */
     @Delete
-    fun delete(shortText: ShortText): Int
+    fun deleteAll(vararg shortText: ShortText): Int
 
 }
