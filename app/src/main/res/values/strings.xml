@@ -13,4 +13,5 @@
     <string name="play">재생</string>
     <string name="skip_prev">이전곡</string>
     <string name="skip_next">다음곡</string>
+    <string name="selected_num">%d 선택</string>
 </resources>

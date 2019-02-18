@@ -17,55 +17,58 @@ internal const val SOUND_PAGE: Int = 1
 internal const val SETTINGS_PAGE: Int = 2
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
-    private lateinit var mPagerAdapter: MainPagerAdapter
     private lateinit var mViewPager: ViewPager
     private lateinit var mNavigationView: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
         if (!EasyPermissions.hasPermissions(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE))
-            EasyPermissions.requestPermissions(this, getString(R.string.permission_rationale), REQ_PERMISSION, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            EasyPermissions.requestPermissions(
+                this,
+                getString(R.string.permission_rationale),
+                REQ_PERMISSION,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
         else
             init()
     }
 
     private fun init() {
-        mPagerAdapter = MainPagerAdapter(supportFragmentManager)
-        mViewPager = pager.apply {
-            adapter = mPagerAdapter
+        setContentView(R.layout.activity_main)
+        mViewPager = main_pager.apply {
+            adapter = MainPagerAdapter(supportFragmentManager)
             addOnPageChangeListener(
-                    object : ViewPager.SimpleOnPageChangeListener() {
-                        private var currentMenu: MenuItem? = null
+                object : ViewPager.SimpleOnPageChangeListener() {
+                    private var currentMenu: MenuItem? = null
 
-                        override fun onPageSelected(position: Int) {
-                            currentMenu?.isChecked = false
-                            currentMenu = mNavigationView.menu.getItem(position)
-                            currentMenu?.isChecked = true
-                        }
-                    })
+                    override fun onPageSelected(position: Int) {
+                        currentMenu?.isChecked = false
+                        currentMenu = mNavigationView.menu.getItem(position)
+                        currentMenu?.isChecked = true
+                    }
+                })
         }
 
-        mNavigationView = navigation.apply {
+        mNavigationView = main_navigation.apply {
             setOnNavigationItemSelectedListener(
-                    BottomNavigationView.OnNavigationItemSelectedListener { item ->
-                        when (item.itemId) {
-                            R.id.navigation_short_text -> {
-                                mViewPager.currentItem = SHORT_TEXT_PAGE
-                                return@OnNavigationItemSelectedListener true
-                            }
-                            R.id.navigation_audio -> {
-                                mViewPager.currentItem = SOUND_PAGE
-                                return@OnNavigationItemSelectedListener true
-                            }
-                            R.id.navigation_settings -> {
-                                mViewPager.currentItem = SETTINGS_PAGE
-                                return@OnNavigationItemSelectedListener true
-                            }
+                BottomNavigationView.OnNavigationItemSelectedListener { item ->
+                    when (item.itemId) {
+                        R.id.navigation_short_text -> {
+                            mViewPager.currentItem = SHORT_TEXT_PAGE
+                            return@OnNavigationItemSelectedListener true
                         }
-                        false
-                    })
+                        R.id.navigation_audio -> {
+                            mViewPager.currentItem = SOUND_PAGE
+                            return@OnNavigationItemSelectedListener true
+                        }
+                        R.id.navigation_settings -> {
+                            mViewPager.currentItem = SETTINGS_PAGE
+                            return@OnNavigationItemSelectedListener true
+                        }
+                    }
+                    false
+                })
         }
     }
 

@@ -1,21 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler"
+    <data>
+
+        <import type="android.view.View" />
+
+        <import type="android.databinding.ObservableArrayList" />
+
+        <import type="com.haruu.notesome.model.ShortText" />
+
+        <variable
+            name="selectedShortTextList"
+            type="ObservableArrayList&lt;ShortText&gt;" />
+    </data>
+
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical" />
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/numChecked"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/activity_horizontal_margin"
-        app:layout_constraintBottom_toBottomOf="@id/recycler"
-        app:layout_constraintEnd_toEndOf="@id/recycler" />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical"
+            app:layoutManager="LinearLayoutManager" />
 
-</android.support.constraint.ConstraintLayout>
+        <TextView
+            android:id="@+id/numChecked"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/activity_horizontal_margin"
+            android:text="@{@string/selected_num(selectedShortTextList.size)}"
+            android:visibility="@{selectedShortTextList.isEmpty ? View.GONE : View.VISIBLE}"
+            app:layout_constraintBottom_toBottomOf="@id/recycler"
+            app:layout_constraintEnd_toEndOf="@id/recycler" />
+
+    </android.support.constraint.ConstraintLayout>
+</layout>

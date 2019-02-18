@@ -2,6 +2,8 @@ package com.haruu.notesome.model
 
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.PrimaryKey
+import android.databinding.BaseObservable
+import android.databinding.Bindable
 
 @Entity
-class ShortText(@PrimaryKey val title: String)
+class ShortText(@PrimaryKey @Bindable val title: String) : BaseObservable()
