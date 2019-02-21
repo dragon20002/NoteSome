@@ -52,8 +52,8 @@ dependencies {
     // room (db)
     def room_version = "1.1.1"
     implementation "android.arch.persistence.room:runtime:$room_version"
-    kapt "android.arch.persistence.room:compiler:$room_version"
     // use kapt for Kotlin
+    kapt "android.arch.persistence.room:compiler:$room_version"
     //    implementation "android.arch.persistence.room:rxjava2:$room_version"
     // tdd
     testImplementation 'junit:junit:4.12'

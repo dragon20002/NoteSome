@@ -12,97 +12,90 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
 import com.haruu.notesome.R
-import com.haruu.notesome.activity.NUM_OF_PAGES
-import com.haruu.notesome.activity.SETTINGS_PAGE
-import com.haruu.notesome.activity.SHORT_TEXT_PAGE
-import com.haruu.notesome.activity.SOUND_PAGE
+import com.haruu.notesome.databinding.ItemShortTextRecyclerBinding
 import com.haruu.notesome.databinding.ItemSoundRecyclerBinding
-import com.haruu.notesome.databinding.ItemTextRecyclerBinding
-import com.haruu.notesome.fragment.SettingsMainFragment
 import com.haruu.notesome.fragment.ShortTextMainFragment
 import com.haruu.notesome.fragment.SoundMainFragment
 import com.haruu.notesome.model.ShortText
 import com.haruu.notesome.model.Sound
 
-class MainPagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
+class MainPagerAdapter(fm: FragmentManager, private val fragments: Array<Fragment>) : FragmentStatePagerAdapter(fm) {
 
-    override fun getCount(): Int = NUM_OF_PAGES
+    override fun getCount(): Int = fragments.size
 
     override fun getItem(i: Int): Fragment {
-        return when (i) {
-            SHORT_TEXT_PAGE -> ShortTextMainFragment()
-            SOUND_PAGE -> SoundMainFragment()
-            SETTINGS_PAGE -> SettingsMainFragment()
-            else -> ShortTextMainFragment()
-        }
+        return fragments[i]
     }
 
 }
 
 
-class ShortTextRecyclerAdapter(private val onItemCheckBoxClick: (Int) -> Unit)
-    : RecyclerView.Adapter<ShortTextRecyclerAdapter.ViewHolder>() {
-    val mDataSet: ObservableArrayList<ShortText> = ObservableArrayList()
-    val mSelectedData: ObservableArrayList<ShortText> = ObservableArrayList()
+class ShortTextRecyclerAdapter(private val itemListener: ShortTextMainFragment.ItemListener) :
+    RecyclerView.Adapter<ShortTextRecyclerAdapter.ViewHolder>() {
+    val list: MutableList<ShortText> = ArrayList(0)
+    val selectedList: ObservableArrayList<ShortText> = ObservableArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return DataBindingUtil.inflate<ItemTextRecyclerBinding>(LayoutInflater.from(parent.context),
-                R.layout.item_text_recycler, parent, false
+        return DataBindingUtil.inflate<ItemShortTextRecyclerBinding>(
+            LayoutInflater.from(parent.context),
+            R.layout.item_short_text_recycler, parent, false
         ).let { ViewHolder(it) }
     }
 
-    override fun getItemCount() = mDataSet.size
+    override fun getItemCount() = list.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.binding.apply {
-            selected = mSelectedData.contains(mDataSet[position])
-            shortText = mDataSet[position]
+            selected = selectedList.contains(list[position])
+            shortText = list[position]
             checkbox.setOnClickListener {
-                mSelectedData.apply {
-                    if (contains(mDataSet[position]))
-                        remove(mDataSet[position])
+                selectedList.apply {
+                    if (contains(list[position]))
+                        remove(list[position])
                     else
-                        add(mDataSet[position])
+                        add(list[position])
                 }
-                onItemCheckBoxClick(mSelectedData.size)
+                itemListener.onCheckBoxClick(selectedList.size)
             }
         }
     }
 
-    class ViewHolder(val binding: ItemTextRecyclerBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: ItemShortTextRecyclerBinding) : RecyclerView.ViewHolder(binding.root)
 }
 
 
-class SoundRecyclerAdapter(private val onItemCheckBoxClick: (Int) -> Unit,
-                           private val onItemTitleClick: (Sound) -> Unit
-) : RecyclerView.Adapter<SoundRecyclerAdapter.ViewHolder>() {
-    var mCurrentSound: Sound? = null
-    val mDataSet: ObservableArrayList<Sound> = ObservableArrayList()
-    val mSelectedData: ObservableArrayList<Sound> = ObservableArrayList()
+class SoundRecyclerAdapter(private val itemListener: SoundMainFragment.ItemListener) :
+    RecyclerView.Adapter<SoundRecyclerAdapter.ViewHolder>() {
+    var current: Sound? = null
+    val list: MutableList<Sound> = ArrayList(0)
+    val selectedList: ObservableArrayList<Sound> = ObservableArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return DataBindingUtil.inflate<ItemSoundRecyclerBinding>(LayoutInflater.from(parent.context),
-                R.layout.item_sound_recycler, parent, false
+        return DataBindingUtil.inflate<ItemSoundRecyclerBinding>(
+            LayoutInflater.from(parent.context),
+            R.layout.item_sound_recycler, parent, false
         ).let { ViewHolder(it) }
     }
 
-    override fun getItemCount() = mDataSet.size
+    override fun getItemCount() = list.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.binding.apply {
-            current = mCurrentSound
-            selected = mSelectedData.contains(mDataSet[position])
-            sound = mDataSet[position]
+            current = this@SoundRecyclerAdapter.current
+            selected = selectedList.contains(list[position])
+            sound = list[position]
             checkbox.setOnClickListener {
-                mSelectedData.apply {
-                    if (contains(mDataSet[position]))
-                        remove(mDataSet[position])
+                selectedList.apply {
+                    if (contains(list[position]))
+                        remove(list[position])
                     else
-                        add(mDataSet[position])
+                        add(list[position])
                 }
-                onItemCheckBoxClick(mSelectedData.size)
+                itemListener.onCheckBoxClick(selectedList.size)
             }
-            title.setOnClickListener { onItemTitleClick(mDataSet[position]) }
+            title.setOnClickListener {
+                itemListener.onTitleClick(list[position])
+            }
         }
     }
 

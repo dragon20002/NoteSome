@@ -1,23 +1,15 @@
 package com.haruu.notesome.fragment
 
-import android.content.Context
 import android.content.DialogInterface
-import android.database.sqlite.SQLiteConstraintException
 import android.databinding.DataBindingUtil
-import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v7.widget.LinearLayoutManager
 import android.view.*
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import com.haruu.notesome.R
 import com.haruu.notesome.adapter.ShortTextRecyclerAdapter
 import com.haruu.notesome.adapter.SoundRecyclerAdapter
-import com.haruu.notesome.dao.AppDatabase
-import com.haruu.notesome.dao.ShortTextDao
-import com.haruu.notesome.dao.SoundDao
 import com.haruu.notesome.databinding.FragmentShortTextBinding
 import com.haruu.notesome.databinding.FragmentSoundBinding
 import com.haruu.notesome.dialogfragment.BaseDialogFragment
@@ -25,38 +17,39 @@ import com.haruu.notesome.dialogfragment.FileChooserDialogFragment
 import com.haruu.notesome.dialogfragment.TextInputDialogFragment
 import com.haruu.notesome.model.ShortText
 import com.haruu.notesome.model.Sound
-import java.io.File
+import com.haruu.notesome.presenter.ShortTextContract
+import com.haruu.notesome.presenter.SoundContract
 
-class ShortTextMainFragment : Fragment() {
-    private lateinit var mShortTextDao: ShortTextDao
-    private var mBtnDelete: MenuItem? = null
-    private val mViewAdapter: ShortTextRecyclerAdapter = ShortTextRecyclerAdapter { selectedNum ->
-        mBtnDelete?.isVisible = selectedNum > 0
+
+class ShortTextMainFragment : Fragment(), ShortTextContract.View {
+
+    override lateinit var presenter: ShortTextContract.Presenter
+
+    private var btnDel: MenuItem? = null
+
+    private val listAdapter: ShortTextRecyclerAdapter =
+        ShortTextRecyclerAdapter(object : ItemListener {
+            override fun onCheckBoxClick(selectedNum: Int) {
+                btnDel?.isVisible = selectedNum > 0
+            }
+        })
+
+    override fun onResume() {
+        super.onResume()
+        presenter.start()
     }
 
-    override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
-        Thread(Runnable {
-            context?.let {
-                AppDatabase.getInstance(it)?.shortTextDao()?.let { dao ->
-                    mShortTextDao = dao
-                    mViewAdapter.mDataSet.addAll(dao.getAll())
-                    activity?.runOnUiThread { mViewAdapter.notifyDataSetChanged() }
-                }
-            }
-        }).start()
-
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return DataBindingUtil.inflate<FragmentShortTextBinding>(
-                inflater, R.layout.fragment_short_text, container, false
+            inflater, R.layout.fragment_short_text, container, false
         ).apply {
-            selectedShortTextList = mViewAdapter.mSelectedData
+            selectedShortTextList = listAdapter.selectedList
 
             setHasOptionsMenu(true)
 
             recycler.apply {
                 setHasFixedSize(true)
-                adapter = mViewAdapter
+                adapter = listAdapter
             }
         }.root
     }
@@ -64,130 +57,115 @@ class ShortTextMainFragment : Fragment() {
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         menu?.clear()
         inflater?.inflate(R.menu.option_short_text, menu)
-        mBtnDelete =
-                menu?.findItem(R.id.delete_selected)?.apply { isVisible = mViewAdapter.mSelectedData.isNotEmpty() }
+        btnDel =
+            menu?.findItem(R.id.delete_selected)?.apply { isVisible = listAdapter.selectedList.isNotEmpty() }
         super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (item?.itemId == R.id.add_short_text) {
-            TextInputDialogFragment().setMessage("추가할 텍스트를 입력하세요.")
-                    .setPositiveButton("확인", listener = { text ->
-                        Thread(Runnable {
-                            val some = ShortText(title = text)
-                            try {
-                                if (mShortTextDao.insertAll(some).isNotEmpty()) {
-                                    mViewAdapter.mDataSet.add(some)
-                                    activity?.runOnUiThread { mViewAdapter.notifyDataSetChanged() }
-                                }
-                            } catch (e: SQLiteConstraintException) {
-                                e.printStackTrace()
-                            }
-                        }).start()
-                    })
-                    .setNeutralButton("취소", listener = {})
-                    .show(fragmentManager, "add text")
-            return true
-
+            showAdd()
         } else if (item?.itemId == R.id.delete_selected) {
-            BaseDialogFragment()
-                    .setMessage("선택된 항목들을 삭제합니다.")
-                    .setPositiveButton("삭제", DialogInterface.OnClickListener { _, _ ->
-                        // DB 이용 시 비동기처리를 하므로 리스트와 DB 사이의 버퍼용 리스트를 사용한다.
-                        val checkedList: ArrayList<ShortText> = ArrayList(mViewAdapter.mSelectedData)
-                        mViewAdapter.mSelectedData.clear()
-                        mBtnDelete?.isVisible = false
-                        Thread(Runnable {
-                            mShortTextDao.deleteAll(*checkedList.toTypedArray())
-                            mViewAdapter.mDataSet.removeAll(checkedList)
-                            activity?.runOnUiThread { mViewAdapter.notifyDataSetChanged() }
-                        }).start()
-                    })
-                    .setNeutralButton("취소", DialogInterface.OnClickListener { _, _ -> })
-                    .show(fragmentManager, "delete text")
-            return true
+            showRemove()
         }
-        return false
+        return true
+    }
+
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        presenter.result(requestCode, resultCode)
+//    }
+
+    override fun showList(shortTextList: List<ShortText>) {
+        with(listAdapter) {
+            list.clear()
+            list.addAll(shortTextList)
+            notifyDataSetChanged()
+        }
+    }
+
+    override fun showItem(vararg shortText: ShortText) {
+        shortText.forEach {
+            with(listAdapter) {
+                list.add(it)
+                notifyItemInserted(list.size - 1)
+            }
+        }
+    }
+
+    override fun removeItem(vararg shortText: ShortText) {
+        shortText.forEach {
+            with(listAdapter) {
+                val position = list.indexOf(it)
+                list.removeAt(position)
+                notifyItemRemoved(position)
+            }
+        }
+    }
+
+    override fun showAdd() {
+        TextInputDialogFragment().setMessage("추가할 텍스트를 입력하세요.")
+            .setPositiveButton("확인", listener = { text -> presenter.add(ShortText(text)) })
+            .setNeutralButton("취소", listener = {})
+            .show(fragmentManager, "add text")
+    }
+
+    override fun showRemove() {
+        BaseDialogFragment()
+            .setMessage("선택된 항목들을 삭제합니다.")
+            .setPositiveButton("삭제", DialogInterface.OnClickListener { _, _ ->
+                val selectedList: List<ShortText> = ArrayList(listAdapter.selectedList)
+                listAdapter.selectedList.clear()
+                btnDel?.isVisible = false
+                presenter.remove(*selectedList.toTypedArray())
+            })
+            .setNeutralButton("취소", DialogInterface.OnClickListener { _, _ -> })
+            .show(fragmentManager, "delete text")
+    }
+
+    interface ItemListener {
+        fun onCheckBoxClick(selectedNum: Int)
     }
 }
 
-class SoundMainFragment : Fragment() {
-    private lateinit var mSoundDao: SoundDao
+class SoundMainFragment : Fragment(), SoundContract.View {
+
+    override lateinit var presenter: SoundContract.Presenter
+
+    private var btnDel: MenuItem? = null
     private lateinit var mSeekBar: SeekBar
-    private var mSeekBarUpdateThread: Thread? = null
     private lateinit var mMediaController: LinearLayout
-    private var mMediaPlayer: MediaPlayer? = null
-    private var mBtnDelete: MenuItem? = null
-    private val mViewAdapter: SoundRecyclerAdapter = SoundRecyclerAdapter({ selectedNum ->
-        mBtnDelete?.isVisible = selectedNum > 0
-    }, { sound -> playSound(sound) })
 
-    private fun playSound(sound: Sound) {
-        context?.getFileStreamPath(sound.title)?.let { file ->
-            mMediaPlayer?.stop()
-            mSeekBarUpdateThread?.interrupt()
-            mMediaPlayer = MediaPlayer.create(context, Uri.fromFile(file))?.also { mp ->
-                mSeekBar.max = mp.duration
-
-                mSeekBarUpdateThread = Thread {
-                    while (true) {
-                        activity?.runOnUiThread {
-                            mp.currentPosition.let { pos -> mSeekBar.progress = pos }
-                        }
-
-                        try {
-                            Thread.sleep(1000)
-                        } catch (e: InterruptedException) {
-                            e.printStackTrace()
-                            break
-                        }
-                    }
-                }.apply { start() }
-
-                mMediaController.getChildAt(1).apply {
-                    //재생버튼
-                    mp.setOnCompletionListener {
-                        this.setBackgroundResource(R.drawable.ic_play_arrow_black_24dp)
-                        mSeekBarUpdateThread?.interrupt()
-                        mMediaPlayer = null
-                    }
-                    mViewAdapter.mCurrentSound = sound
-                    this.setBackgroundResource(R.drawable.ic_pause_black_24dp)
-                    mp.start()
-                    mViewAdapter.notifyDataSetChanged()
-                }
+    private val listAdapter: SoundRecyclerAdapter =
+        SoundRecyclerAdapter(object : ItemListener {
+            override fun onCheckBoxClick(selectedNum: Int) {
+                btnDel?.isVisible = selectedNum > 0
             }
-        }
+
+            override fun onTitleClick(sound: Sound) {
+                presenter.play(context, sound)
+            }
+        })
+
+    override fun onResume() {
+        super.onResume()
+        presenter.start()
     }
 
-    override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
-        Thread(Runnable {
-            context?.let {
-                AppDatabase.getInstance(it)?.soundDao()?.let { dao ->
-                    mSoundDao = dao
-                    if (mViewAdapter.mDataSet.addAll(dao.getAll()) && mViewAdapter.mDataSet.isNotEmpty()) {
-                        activity?.runOnUiThread { mViewAdapter.notifyDataSetChanged() }
-                        mViewAdapter.mCurrentSound = mViewAdapter.mDataSet[0]
-                    }
-                }
-            }
-        }).start()
-
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return DataBindingUtil.inflate<FragmentSoundBinding>(
-                inflater, R.layout.fragment_sound, container, false
+            inflater, R.layout.fragment_sound, container, false
         ).apply {
-            selectedSoundList = mViewAdapter.mSelectedData
+            selectedSoundList = listAdapter.selectedList
 
             setHasOptionsMenu(true)
 
             recycler.apply {
                 setHasFixedSize(true)
-                layoutManager = LinearLayoutManager(context)
-                adapter = mViewAdapter
+                adapter = listAdapter
             }
             mSeekBar = seekBar.apply {
+                isEnabled = false
+
                 setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                     private var progress: Int = 0
 
@@ -198,41 +176,42 @@ class SoundMainFragment : Fragment() {
                     override fun onStartTrackingTouch(seekBar: SeekBar?) {}
 
                     override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                        mMediaPlayer?.seekTo(progress)
+                        presenter.seek(progress)
                     }
                 })
             }
             mMediaController = mediaController.apply {
                 getChildAt(0).setOnClickListener {
-                    if (mViewAdapter.mDataSet.isEmpty()) return@setOnClickListener
-                    var position = mViewAdapter.mDataSet.indexOf(mViewAdapter.mCurrentSound) - 1
-                    if (position == -1) position = mViewAdapter.mDataSet.size - 1
-                    playSound(mViewAdapter.mDataSet[position])
-                }
-                getChildAt(1).setOnClickListener { v ->
-                    if (mViewAdapter.mDataSet.isEmpty()) return@setOnClickListener
-                    mMediaPlayer?.let { mp ->
-                        if (mp.isPlaying) {
-                            v.setBackgroundResource(R.drawable.ic_play_arrow_black_24dp)
-                            mp.pause()
-                        } else {
-                            v.setBackgroundResource(R.drawable.ic_pause_black_24dp)
-                            mp.start()
+                    if (listAdapter.list.isEmpty()) return@setOnClickListener
+                    val position = when {
+                        listAdapter.current != null -> {
+                            val pos = listAdapter.list.indexOf(listAdapter.current!!) - 1
+                            if (pos >= 0) pos
+                            else listAdapter.list.size - 1
                         }
-                        return@setOnClickListener
+                        else -> 0
                     }
-                    //mMediaPlayer == null
-                    mViewAdapter.mCurrentSound?.let { sound ->
-                        playSound(sound)
-                        return@setOnClickListener
+                    presenter.play(context, listAdapter.list[position])
+                }
+                getChildAt(1).setOnClickListener {
+                    if (listAdapter.list.isNotEmpty()) {
+                        if (listAdapter.current != null) //현재 재생되고 있거나 최근에 재생한 Sound
+                            presenter.restartOrPause()
+                        else
+                            presenter.play(context, listAdapter.list[0])
                     }
-                    mViewAdapter.mCurrentSound = mViewAdapter.mDataSet[0].also { sound -> playSound(sound) }
                 }
                 getChildAt(2).setOnClickListener {
-                    if (mViewAdapter.mDataSet.isEmpty()) return@setOnClickListener
-                    var position = mViewAdapter.mDataSet.indexOf(mViewAdapter.mCurrentSound) + 1
-                    if (position == mViewAdapter.mDataSet.size) position = 0
-                    playSound(mViewAdapter.mDataSet[position])
+                    if (listAdapter.list.isEmpty()) return@setOnClickListener
+                    val position = when {
+                        listAdapter.current != null -> {
+                            val pos = listAdapter.list.indexOf(listAdapter.current!!) + 1
+                            if (pos < listAdapter.list.size) pos
+                            else 0
+                        }
+                        else -> 0
+                    }
+                    presenter.play(context, listAdapter.list[position])
                 }
             }
         }.root
@@ -241,68 +220,124 @@ class SoundMainFragment : Fragment() {
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         menu?.clear()
         inflater?.inflate(R.menu.option_sound, menu)
-        mBtnDelete =
-                menu?.findItem(R.id.delete_selected)?.apply { isVisible = mViewAdapter.mSelectedData.isNotEmpty() }
+        btnDel =
+            menu?.findItem(R.id.delete_selected)?.apply { isVisible = listAdapter.selectedList.isNotEmpty() }
         super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (item?.itemId == R.id.add_sound) {
-            FileChooserDialogFragment().setMessage("업로드할 음성 파일을 선택하세요.")
-                    .setPositiveButton("확인", listener = { filename, inputStream ->
-                        Thread(Runnable {
-                            context?.openFileOutput(filename, Context.MODE_PRIVATE)?.let { outputStream ->
-                                outputStream.write(inputStream.readBytes())
-                                outputStream.close()
-
-                                val sound = Sound(title = filename)
-                                try {
-                                    if (mSoundDao.insertAll(sound).isNotEmpty()) {
-                                        mViewAdapter.mDataSet.add(sound)
-                                        activity?.runOnUiThread { mViewAdapter.notifyDataSetChanged() }
-                                        if (mViewAdapter.mCurrentSound == null && mViewAdapter.mDataSet.isNotEmpty())
-                                            mViewAdapter.mCurrentSound = mViewAdapter.mDataSet[0]
-                                    }
-                                } catch (e: SQLiteConstraintException) {
-                                    e.printStackTrace()
-                                }
-                            }
-                        }).start()
-                    })
-                    .setNeutralButton("취소", listener = {})
-                    .show(fragmentManager, "add audio")
-            return true
-
+            showAdd()
         } else if (item?.itemId == R.id.delete_selected) {
-            BaseDialogFragment()
-                    .setMessage("선택된 항목들을 삭제합니다.")
-                    .setPositiveButton("삭제", DialogInterface.OnClickListener { _, _ ->
-                        // DB 이용 시 비동기처리를 하므로 리스트와 DB 사이의 버퍼용 리스트를 사용한다.
-                        val checkedList: ArrayList<Sound> = ArrayList(mViewAdapter.mSelectedData)
-                        mViewAdapter.mSelectedData.clear()
-                        mBtnDelete?.isVisible = false
-                        Thread(Runnable {
-                            mSoundDao.deleteAll(*checkedList.toTypedArray())
-                            mViewAdapter.mDataSet.removeAll(checkedList)
-                            if (mViewAdapter.mDataSet.isEmpty())
-                                mViewAdapter.mCurrentSound = null
-                            checkedList.forEach { File(context?.filesDir, it.title).delete() }
-                            activity?.runOnUiThread { mViewAdapter.notifyDataSetChanged() }
-                        }).start()
-                    })
-                    .setNeutralButton("취소", DialogInterface.OnClickListener { _, _ -> })
-                    .show(fragmentManager, "delete audio")
-            return true
+            showRemove()
         }
-        return false
+        return true
+    }
+
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        presenter.result(requestCode, resultCode)
+//    }
+
+    override fun showList(soundList: List<Sound>) {
+        with(listAdapter) {
+            list.clear()
+            list.addAll(soundList)
+            notifyDataSetChanged()
+        }
+    }
+
+    override fun showItem(vararg sound: Sound) {
+        sound.forEach {
+            with(listAdapter) {
+                list.add(it)
+                notifyItemInserted(list.size - 1)
+            }
+        }
+    }
+
+    override fun removeItem(vararg sound: Sound) {
+        sound.forEach {
+            with(listAdapter) {
+                val position = list.indexOf(it)
+                list.removeAt(position)
+                notifyItemRemoved(position)
+            }
+        }
+    }
+
+    override fun showAdd() {
+        FileChooserDialogFragment().setMessage("업로드할 음성 파일을 선택하세요.")
+            .setPositiveButton("확인", listener = { filename, inputStream ->
+                // save file
+                context?.let { context -> presenter.saveFile(context, filename, inputStream) }
+                // insert data
+                presenter.add(Sound(filename))
+            })
+            .setNeutralButton("취소", listener = {})
+            .show(fragmentManager, "add audio")
+    }
+
+    override fun showRemove() {
+        BaseDialogFragment()
+            .setMessage("선택된 항목들을 삭제합니다.")
+            .setPositiveButton("삭제", DialogInterface.OnClickListener { _, _ ->
+                btnDel?.isVisible = false
+
+                val selectedList: List<Sound> = ArrayList(listAdapter.selectedList)
+                listAdapter.selectedList.clear()
+
+                if (listAdapter.current != null && selectedList.contains(listAdapter.current!!))
+                    presenter.stop()
+
+                // delete data
+                presenter.remove(*selectedList.toTypedArray())
+                // delete file
+                context?.let { context ->
+                    selectedList.forEach {
+                        presenter.deleteFile(context, it.title)
+                    }
+                }
+            })
+            .setNeutralButton("취소", DialogInterface.OnClickListener { _, _ -> })
+            .show(fragmentManager, "delete audio")
+    }
+
+    override fun updateSeekBarMax(max: Int) {
+        mSeekBar.max = max
+    }
+
+    override fun updateSeekBarProgress(currentPosition: Int) {
+        mSeekBar.progress = currentPosition
+    }
+
+    override fun updateMediaController(isPlaying: Boolean) {
+        mMediaController.getChildAt(1).apply {
+            if (isPlaying)
+                setBackgroundResource(R.drawable.ic_pause_black_24dp)
+            else
+                setBackgroundResource(R.drawable.ic_play_arrow_black_24dp)
+        }
+    }
+
+    override fun updateCurrentSound(currentSound: Sound?) {
+        listAdapter.current = currentSound
+        listAdapter.notifyDataSetChanged()
+        mSeekBar.progress = 0
+        mSeekBar.isEnabled = currentSound != null
+    }
+
+    interface ItemListener {
+        fun onCheckBoxClick(selectedNum: Int)
+
+        fun onTitleClick(sound: Sound)
     }
 }
 
 class SettingsMainFragment : Fragment() {
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_settings, container, false)
     }

@@ -7,7 +7,7 @@ import com.haruu.notesome.model.Sound
 interface SoundDao {
 
     @Query("SELECT * FROM sound")
-    fun getAll(): List<Sound>
+    fun get(): List<Sound>
 
 //    @Query("SELECT * FROM some WHERE id IN (:idList)")
 //    fun loadAllByIds(idList: List<Long>): List<Sound>
@@ -19,7 +19,7 @@ interface SoundDao {
      * @return list of inserted ids
      */
     @Insert
-    fun insertAll(vararg shortText: Sound): List<Long> //ids of inserted items
+    fun insert(vararg shortText: Sound): List<Long> //ids of inserted items
 
 //    /**
 //     * The implementation of the method will update its parameters in the database
@@ -35,5 +35,5 @@ interface SoundDao {
      * @return the number of rows affected
      */
     @Delete
-    fun deleteAll(vararg shortText: Sound): Int
+    fun delete(vararg shortText: Sound): Int
 }

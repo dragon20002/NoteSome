@@ -7,7 +7,7 @@ import com.haruu.notesome.model.ShortText
 interface ShortTextDao {
 
     @Query("SELECT * FROM shorttext")
-    fun getAll(): List<ShortText>
+    fun get(): List<ShortText>
 
 //    @Query("SELECT * FROM some WHERE id IN (:idList)")
 //    fun loadAllByIds(idList: List<Long>): List<ShortText>
@@ -19,7 +19,7 @@ interface ShortTextDao {
      * @return list of inserted ids
      */
     @Insert
-    fun insertAll(vararg shortText: ShortText): List<Long> //ids of inserted items
+    fun insert(vararg shortText: ShortText): List<Long> //ids of inserted items
 
 //    /**
 //     * The implementation of the method will update its parameters in the database
@@ -35,6 +35,6 @@ interface ShortTextDao {
      * @return the number of rows affected
      */
     @Delete
-    fun deleteAll(vararg shortText: ShortText): Int
+    fun delete(vararg shortText: ShortText): Int
 
 }

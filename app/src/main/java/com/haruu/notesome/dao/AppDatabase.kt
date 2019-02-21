@@ -15,12 +15,12 @@ abstract class AppDatabase : RoomDatabase() {
         private var instance: AppDatabase? = null
 
         @Synchronized
-        fun getInstance(context: Context): AppDatabase? {
+        fun getInstance(context: Context): AppDatabase {
             if (instance == null) {
                 instanceCount++
                 instance = Room.databaseBuilder(context, AppDatabase::class.java, "some").build()
             }
-            return instance
+            return instance!!
         }
     }
 
