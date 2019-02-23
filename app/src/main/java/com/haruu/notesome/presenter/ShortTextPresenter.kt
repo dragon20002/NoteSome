@@ -1,8 +1,10 @@
 package com.haruu.notesome.presenter
 
+import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.os.Handler
 import android.os.Looper
+import com.haruu.notesome.dao.AppDatabase
 import com.haruu.notesome.dao.ShortTextDao
 import com.haruu.notesome.model.ShortText
 

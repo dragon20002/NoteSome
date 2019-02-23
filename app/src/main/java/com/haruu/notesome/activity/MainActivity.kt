@@ -39,6 +39,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     private fun init() {
         setContentView(R.layout.activity_main)
         mViewPager = main_pager.apply {
+            offscreenPageLimit = 2
+
             adapter = MainPagerAdapter(
                 supportFragmentManager,
                 arrayOf(
@@ -56,7 +58,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                     },
                     SettingsMainFragment()
                 )
-            )
+            ).apply {
+            }
             addOnPageChangeListener(
                 object : ViewPager.SimpleOnPageChangeListener() {
                     private var currentMenu: MenuItem? = null

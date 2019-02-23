@@ -129,6 +129,7 @@ class SoundMainFragment : Fragment(), SoundContract.View {
     override fun showList(soundList: List<Sound>) {
         with(listAdapter) {
             list.clear()
+            selectedList.clear()
             list.addAll(soundList)
             notifyDataSetChanged()
         }
@@ -171,7 +172,7 @@ class SoundMainFragment : Fragment(), SoundContract.View {
             .setPositiveButton("삭제", DialogInterface.OnClickListener { _, _ ->
                 btnDel?.isVisible = false
 
-                val selectedList: List<Sound> = ArrayList(listAdapter.selectedList)
+                val selectedList: List<Sound> = ArrayList(listAdapter.selectedList.keys)
                 listAdapter.selectedList.clear()
 
                 if (listAdapter.current != null && selectedList.contains(listAdapter.current!!))

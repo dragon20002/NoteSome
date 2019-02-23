@@ -6,13 +6,13 @@
 
         <import type="android.view.View" />
 
-        <import type="android.databinding.ObservableArrayList" />
+        <import type="android.databinding.ObservableArrayMap" />
 
         <import type="com.haruu.notesome.model.ShortText" />
 
         <variable
             name="selectedShortTextList"
-            type="ObservableArrayList&lt;ShortText&gt;" />
+            type="ObservableArrayMap&lt;ShortText, Boolean&gt;" />
     </data>
 
     <android.support.constraint.ConstraintLayout

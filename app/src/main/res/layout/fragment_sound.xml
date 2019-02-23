@@ -6,13 +6,13 @@
 
         <import type="android.view.View" />
 
-        <import type="android.databinding.ObservableArrayList" />
+        <import type="android.databinding.ObservableArrayMap" />
 
         <import type="com.haruu.notesome.model.Sound" />
 
         <variable
             name="selectedSoundList"
-            type="ObservableArrayList&lt;Sound&gt;" />
+            type="ObservableArrayMap&lt;Sound, Boolean&gt;" />
     </data>
 
     <android.support.constraint.ConstraintLayout

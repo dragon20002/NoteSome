@@ -3,6 +3,7 @@ package com.haruu.notesome.adapter
 import android.databinding.BindingAdapter
 import android.databinding.DataBindingUtil
 import android.databinding.ObservableArrayList
+import android.databinding.ObservableArrayMap
 import android.graphics.Typeface
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
@@ -33,7 +34,7 @@ class MainPagerAdapter(fm: FragmentManager, private val fragments: Array<Fragmen
 class ShortTextRecyclerAdapter(private val itemListener: ShortTextMainFragment.ItemListener) :
     RecyclerView.Adapter<ShortTextRecyclerAdapter.ViewHolder>() {
     val list: MutableList<ShortText> = ArrayList(0)
-    val selectedList: ObservableArrayList<ShortText> = ObservableArrayList()
+    val selectedList: ObservableArrayMap<ShortText, Boolean> = ObservableArrayMap()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return DataBindingUtil.inflate<ItemShortTextRecyclerBinding>(
@@ -46,14 +47,14 @@ class ShortTextRecyclerAdapter(private val itemListener: ShortTextMainFragment.I
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.binding.apply {
-            selected = selectedList.contains(list[position])
+            selected = selectedList.containsKey(list[position])
             shortText = list[position]
             checkbox.setOnClickListener {
                 selectedList.apply {
-                    if (contains(list[position]))
+                    if (containsKey(list[position]))
                         remove(list[position])
                     else
-                        add(list[position])
+                        put(list[position], true)
                 }
                 itemListener.onCheckBoxClick(selectedList.size)
             }
@@ -68,7 +69,7 @@ class SoundRecyclerAdapter(private val itemListener: SoundMainFragment.ItemListe
     RecyclerView.Adapter<SoundRecyclerAdapter.ViewHolder>() {
     var current: Sound? = null
     val list: MutableList<Sound> = ArrayList(0)
-    val selectedList: ObservableArrayList<Sound> = ObservableArrayList()
+    val selectedList: ObservableArrayMap<Sound, Boolean> = ObservableArrayMap()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return DataBindingUtil.inflate<ItemSoundRecyclerBinding>(
@@ -82,14 +83,14 @@ class SoundRecyclerAdapter(private val itemListener: SoundMainFragment.ItemListe
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.binding.apply {
             current = this@SoundRecyclerAdapter.current
-            selected = selectedList.contains(list[position])
+            selected = selectedList.containsKey(list[position])
             sound = list[position]
             checkbox.setOnClickListener {
                 selectedList.apply {
-                    if (contains(list[position]))
+                    if (containsKey(list[position]))
                         remove(list[position])
                     else
-                        add(list[position])
+                        put(list[position], true)
                 }
                 itemListener.onCheckBoxClick(selectedList.size)
             }

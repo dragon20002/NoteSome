@@ -70,6 +70,7 @@ class ShortTextMainFragment : Fragment(), ShortTextContract.View {
     override fun showList(shortTextList: List<ShortText>) {
         with(listAdapter) {
             list.clear()
+            selectedList.clear()
             list.addAll(shortTextList)
             notifyDataSetChanged()
         }
@@ -105,7 +106,7 @@ class ShortTextMainFragment : Fragment(), ShortTextContract.View {
         BaseDialogFragment()
             .setMessage("선택된 항목들을 삭제합니다.")
             .setPositiveButton("삭제", DialogInterface.OnClickListener { _, _ ->
-                val selectedList: List<ShortText> = ArrayList(listAdapter.selectedList)
+                val selectedList: List<ShortText> = ArrayList(listAdapter.selectedList.keys)
                 listAdapter.selectedList.clear()
                 btnDel?.isVisible = false
                 presenter.remove(*selectedList.toTypedArray())
